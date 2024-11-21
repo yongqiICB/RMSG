@@ -1,4 +1,7 @@
+pub mod manhattan_mst;
 use std::collections::{BTreeMap, BTreeSet};
+
+use manhattan_mst::manhattan_mst;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Point {
@@ -42,28 +45,28 @@ impl ActiveSet {
             Region::R1 => {
                 for (x, ys) in self.points.range(..p.x).rev() {
                     for y in ys.range(..x + p.y - p.x) {
-                        res.push(Point{x: *x,y: *y});
+                        res.push(Point { x: *x, y: *y });
                     }
                 }
-            },
+            }
             Region::R2 => {
                 for (x, ys) in self.points.range(..p.x).rev() {
                     for y in ys.range(x - p.x + p.y..p.y).rev() {
-                        res.push(Point{x: *x,y: *y});
+                        res.push(Point { x: *x, y: *y });
                     }
                 }
-            },
+            }
             Region::R3 => {
                 for (x, ys) in self.points.range(..p.x).rev() {
-                    for y in ys.range(p.x + p.y + *x ..) {
-                        res.push(Point{x: *x, y: *y});
+                    for y in ys.range(p.x + p.y + *x..) {
+                        res.push(Point { x: *x, y: *y });
                     }
                 }
-            },
+            }
             Region::R4 => {
                 for (x, ys) in self.points.range(..p.x).rev() {
-                    for y in ys.range(p.y .. p.x + p.y + *x) {
-                        res.push(Point{x: *x, y: *y});
+                    for y in ys.range(p.y..p.x + p.y + *x) {
+                        res.push(Point { x: *x, y: *y });
                     }
                 }
             }
@@ -76,7 +79,7 @@ impl ActiveSet {
         let mut need_delete = false;
         if let Some(ys) = self.points.get_mut(&p.x) {
             ys.remove(&p.y);
-            if ys.len() == 0 {
+            if ys.is_empty() {
                 need_delete = true;
             }
         };
@@ -85,53 +88,34 @@ impl ActiveSet {
         }
     }
     pub fn add(&mut self, p: Point) {
-        let res = self.points.entry(p.x).or_insert(BTreeSet::new());
+        let res = self.points.entry(p.x).or_default();
         res.insert(p.y);
     }
 }
 pub fn build(points: Vec<Point>) -> Graph {
-    let mut res = Graph::default();
-    let mut sweep_line = points.clone();
-    sweep_line.sort_by_key(|p| p.x + p.y);
-    let mut active_set = ActiveSet::default();
-    let mut active_set_r2 = ActiveSet::default();
-    for p in sweep_line.iter() {
-        let s = active_set.p_at_region_looking_from_response(*p, Region::R1);
-        let s_r2 = active_set_r2.p_at_region_looking_from_response(*p, Region::R2);
-        for p2 in s {
-            res.add_edge(*p, p2);
-            active_set.remove(p2);
-        }
-        for p2 in s_r2 {
-            res.add_edge(*p, p2);
-            active_set_r2.remove(p2);
-        }
-        active_set.add(*p);
-        active_set_r2.add(*p);
+    let xs: Vec<_> = points.iter().map(|a| a.x).collect();
+    let ys: Vec<_> = points.iter().map(|a| a.y).collect();
+    let res = manhattan_mst(xs, ys);
+    Graph {
+        points: points.clone(),
+        edges: res
+            .iter()
+            .map(|(s, t)| (points[*s], points[*t]))
+            .collect(),
     }
-    active_set = ActiveSet::default();
-    active_set_r2 = ActiveSet::default();
-    sweep_line.sort_by_key(|p| p.x - p.y);
-    for p in sweep_line.iter() {
-        let s = active_set.p_at_region_looking_from_response(*p, Region::R3);
-        let s_r2 = active_set_r2.p_at_region_looking_from_response(*p, Region::R4);
-        for p2 in s {
-            res.add_edge(*p, p2);
-            active_set.remove(p2);
-        }
-        for p2 in s_r2 {
-            res.add_edge(*p, p2);
-            active_set_r2.remove(p2);
-        }
-        active_set.add(*p);
-        active_set_r2.add(*p);
-    }
-    res
 }
-
 
 #[test]
 pub fn unit_test_a() {
-    let pts = vec![Point{x: 0, y: 0}, Point{x: 1, y: 1}, Point{x: 4, y: 5}, Point{x: 1, y: 4}, Point{x: 1, y: 9}, Point{x: 8, y: 1}, Point{x: 0, y: 8}, Point{x: 9, y: 3}];
+    let pts = vec![
+        Point { x: 0, y: 0 },
+        Point { x: 1, y: 1 },
+        Point { x: 4, y: 5 },
+        Point { x: 1, y: 4 },
+        Point { x: 1, y: 9 },
+        Point { x: 8, y: 1 },
+        Point { x: 0, y: 8 },
+        Point { x: 9, y: 3 },
+    ];
     println!("{:?}", build(pts));
 }
