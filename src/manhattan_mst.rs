@@ -14,7 +14,6 @@ pub fn manhattan_mst(mut xs: Vec<i64>, mut ys: Vec<i64>) -> Vec<(usize, usize)> 
                     if xs[*i] - xs[*j] < ys[*i] - ys[*j] {
                         break;
                     }
-                    println!("({} {}) ({} {})", xs[*i], ys[*i], xs[*j], ys[*j]);
                     to_move.push((*y_pos, *j));
                     ret.push((*i, *j));
                 }
@@ -24,9 +23,7 @@ pub fn manhattan_mst(mut xs: Vec<i64>, mut ys: Vec<i64>) -> Vec<(usize, usize)> 
                 sweep.insert(-ys[*i], *i);
             }
             swap(&mut xs, &mut ys);
-            println!("swap xs, ys");
         }
-        println!("x =  x");
         for x in xs.iter_mut() {
             *x = -(*x);
         }
