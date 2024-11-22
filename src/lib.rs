@@ -98,10 +98,7 @@ pub fn build(points: Vec<Point>) -> Graph {
     let res = manhattan_mst(xs, ys);
     Graph {
         points: points.clone(),
-        edges: res
-            .iter()
-            .map(|(s, t)| (points[*s], points[*t]))
-            .collect(),
+        edges: res.iter().map(|(s, t)| (points[*s], points[*t])).collect(),
     }
 }
 
